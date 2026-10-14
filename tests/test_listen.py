@@ -210,6 +210,7 @@ async def test_modern_event_without_identifier_is_ignored(auth, mocker):
     msg = load_alert_v2("camera_motion", 123456782)
     data = json.loads(msg["data"]["data"])
     data["event"]["ding"].pop("id")
+    data["event"].pop("eventito")
     msg["data"]["data"] = json.dumps(data)
 
     listener._on_notification(msg, "1234567")
@@ -360,7 +361,7 @@ async def test_unparseable_notification_does_not_raise(auth, mocker, caplog):
 
     msg = load_alert_v2("camera_motion", 123456782)
     data = json.loads(msg["data"]["data"])
-    del data["event"]["ding"]["id"]
+    del data["device"]
     msg["data"]["data"] = json.dumps(data)
 
     listener._on_notification(msg, "12345671")
