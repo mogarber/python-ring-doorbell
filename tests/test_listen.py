@@ -338,7 +338,7 @@ async def test_periodic_session_refresh_repeats(auth, mocker, caplog):
     listener = RingEventListener(ring)
     listener.SESSION_REFRESH_INTERVAL = -1
     listener.SESSION_REFRESH_RETRY_INTERVAL = 0
-    listener.started = True
+    listener._started = True
     listener.fcm_token = "foobar"
     ring.session_refresh_time = time.monotonic()
 
@@ -352,7 +352,7 @@ async def test_periodic_session_refresh_repeats(auth, mocker, caplog):
             raise RingError(msg)
         ring.session_refresh_time = time.monotonic()
         if calls == 3:
-            listener.started = False
+            listener._started = False
 
     mocker.patch.object(ring, "async_create_session", side_effect=_create_session)
     subscribe = mocker.patch.object(listener, "add_subscription_to_ring")
