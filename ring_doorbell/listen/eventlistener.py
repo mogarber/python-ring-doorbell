@@ -10,7 +10,7 @@ from contextlib import suppress
 from typing import TYPE_CHECKING, Any, Callable
 
 from async_timeout import timeout as asyncio_timeout
-from firebase_messaging import FcmPushClient, FcmRegisterConfig
+from firebase_messaging import FcmRegisterConfig
 
 from ring_doorbell.const import (
     API_URI,
@@ -34,6 +34,7 @@ from ring_doorbell.exceptions import RingError
 from ring_doorbell.util import parse_datetime
 
 from .listenerconfig import RingEventListenerConfig
+from .pushclient import RingFcmPushClient
 
 if TYPE_CHECKING:
     from ring_doorbell.ring import Ring
@@ -72,7 +73,7 @@ class RingEventListener:
         self._credentials = credentials
         self._credentials_updated_callback = credentials_updated_callback
 
-        self._receiver: FcmPushClient | None = None
+        self._receiver: RingFcmPushClient | None = None
         self._receiver_start_called = False
         self._lifecycle_lock = asyncio.Lock()
         self._default_callback_id: int | None = None
@@ -237,12 +238,12 @@ class RingEventListener:
         _logger.debug("Started event listener")
         return self.started
 
-    def _create_receiver(self) -> FcmPushClient:
+    def _create_receiver(self) -> RingFcmPushClient:
         """Create the FCM receiver for this listener."""
         fcm_config = FcmRegisterConfig(
             FCM_PROJECT_ID, FCM_APP_ID, FCM_API_KEY, FCM_RING_SENDER_ID
         )
-        self._receiver = FcmPushClient(
+        self._receiver = RingFcmPushClient(
             self._on_notification,
             fcm_config,
             self._credentials,
@@ -252,7 +253,7 @@ class RingEventListener:
         )
         return self._receiver
 
-    async def _checkin_and_subscribe(self, receiver: FcmPushClient) -> bool:
+    async def _checkin_and_subscribe(self, receiver: RingFcmPushClient) -> bool:
         """Register the FCM client and subscribe its token with Ring."""
         try:
             self.fcm_token = await receiver.checkin_or_register()
